@@ -6,8 +6,8 @@ Built as part of an internship assignment. AI used: **Claude (Anthropic)** via c
 
 ## Live Demo
 
-- **Frontend (Vercel):** _Add your Vercel URL here after deploy_
-- **Backend (Render):** _Add your Render URL here after deploy_
+- **Frontend (Vercel):** (https://expenzos.vercel.app/)
+- **Backend (Render):** (https://expenzo-4ote.onrender.com)
 
 ---
 
