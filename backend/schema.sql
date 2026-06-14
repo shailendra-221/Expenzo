@@ -76,4 +76,4 @@ CREATE TABLE IF NOT EXISTS expense_messages (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (expense_id) REFERENCES expenses(id) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES users(id)
-);
+);  
