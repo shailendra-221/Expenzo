@@ -15,57 +15,62 @@ const app = express();
 const server = http.createServer(app);
 
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5173';
-const isProd = process.env.NODE_ENV === 'production';
+
+// Trust proxy - required for Render
+app.set('trust proxy', 1);
 
 app.use(
   cors({
     origin: CLIENT_URL,
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+
 app.use(express.json());
 
-// Session store: MySQL-backed in production, default in-memory for local dev
+// Session store
 let sessionStore;
-if (isProd) {
-  const MySQLStore = require('express-mysql-session')(session);
-  sessionStore = new MySQLStore({
-    host: process.env.DB_HOST,
-    port: process.env.DB_PORT || 3306,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-  });
-}
+const MySQLStore = require('express-mysql-session')(session);
+sessionStore = new MySQLStore({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT || 3306,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  ssl: { rejectUnauthorized: false },
+});
 
 app.use(
   session({
     key: 'connect.sid',
     secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
-    store: sessionStore, // undefined => default MemoryStore (fine for local dev)
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: isProd,
-      sameSite: isProd ? 'none' : 'lax',
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
+      secure: true,
+      sameSite: 'none',
+      maxAge: 1000 * 60 * 60 * 24 * 7,
     },
   })
 );
 
 app.use('/api/auth', authRoutes);
 app.use('/api/groups', groupsRoutes);
-app.use('/api', expensesRoutes); // exposes /api/groups/:groupId/expenses and /api/expenses/:id
+app.use('/api', expensesRoutes);
 app.use('/api/me', summaryRoutes);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 
-// --- Socket.io for expense chat ---
+// Socket.io
 const io = new Server(server, {
   cors: {
     origin: CLIENT_URL,
     credentials: true,
+    methods: ['GET', 'POST'],
   },
 });
 
